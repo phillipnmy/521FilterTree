@@ -262,6 +262,9 @@ public class FilterTree extends RandomizableClassifier {
     protected Node makeLeaf(Node node) {
 
         Instances data = ((UnexpandedNodeInfo) node.NodeInfo).Data;
+        if (data.numInstances() == 0){
+            return null;
+        }
         double[] pred;
         if (data.classAttribute().isNumeric()) {
             double sum = 0;
@@ -326,6 +329,9 @@ public class FilterTree extends RandomizableClassifier {
     private SplitInfo computeInfoGain(Instances data, Attribute att) throws Exception {
 
         double infoGain = computeEntropy(data);
+        if (Utils.smOrEq(infoGain,0.0)){
+            return new SplitInfo(0,0);
+        }
 //        SplitInfo splitInfo = computeSplitValue(data, att);
 //        infoGain -= splitInfo.entropy;
 //        splitInfo.entropy = infoGain;
@@ -417,11 +423,15 @@ public class FilterTree extends RandomizableClassifier {
         left = new double[right.length];
 
         //first time, must run!!!
+      //here is very risky!
         currentClassValue = (int)data.get(0).classValue();
-        left[currentClassValue]++;
+        left[currentClassValue] ++;
         right[currentClassValue]--;
-        entropy[0] = originalEntropy - computeEntropy(left)/insCount
-                - computeEntropy(right) * (insCount-1)/ insCount;
+        if(!Utils.eq(valuePoint , data.get(1).value(attribute))){
+            entropy[0] = originalEntropy
+                    - computeEntropy(left)/ insCount
+                    - computeEntropy(right) * (insCount-1)/ insCount;
+        }
 
         //here is the index problem
         for (int i = 1; i < insCount -1; i++) {
@@ -429,21 +439,30 @@ public class FilterTree extends RandomizableClassifier {
             currentAttributeValue = data.get(i).value(attribute);
             //if the current value is not change, set the infoGain to 0
             if (currentAttributeValue == valuePoint){
-                entropy[i] = 0.0;
-            }else {
-                //update then compute the entropy
                 left[currentClassValue] ++;
                 right[currentClassValue]--;
+                entropy[i] = 0.0;
+            }else {
+                // compute the entropy
                 valuePoint = currentAttributeValue;
                 entropy[i] = originalEntropy
                         - computeEntropy(left) * (i+1)/ insCount
                         - computeEntropy(right) * (insCount-i-1)/ insCount;
+                //then update the calss
+                left[currentClassValue] ++;
+                right[currentClassValue]--;
             }
         }
 
         splitIndex = Utils.maxIndex(entropy);
         //check the split point
-        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
+        if (splitIndex == 0){
+            splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
+        }else {
+            splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex - 1).value(attribute))/2;
+        }
+
+
         //return the final result
         SplitInfo splitInfo = new SplitInfo(splitValue, entropy[splitIndex]);
 
@@ -617,9 +636,11 @@ public class FilterTree extends RandomizableClassifier {
         return distribution;
     }
 
-    public boolean implementsMoreEfficientBatchPrediction() {
-        return true;
-    }
+
+        //set it to false when use the allFilter
+//    public boolean implementsMoreEfficientBatchPrediction() {
+//        return true;
+//    }
     /**
      * Method that returns a textual description of the subtree attached to the given node. The description is
      * returned in a string buffer.
