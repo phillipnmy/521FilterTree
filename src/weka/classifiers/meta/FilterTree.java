@@ -443,7 +443,7 @@ public class FilterTree extends RandomizableClassifier {
                 entropy[i-1] = originalEntropy
                         - computeEntropy(left) * (i+1)/ insCount
                         - computeEntropy(right) * (insCount-i-1)/ insCount;
-                //then update the calss
+                //then update the class
                 left[currentClassValue] ++;
                 right[currentClassValue]--;
             }
@@ -451,19 +451,12 @@ public class FilterTree extends RandomizableClassifier {
 
         splitIndex = Utils.maxIndex(entropy);
         //check the split point
-        if (splitIndex == 0){
-            splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
-        }
 
-        else{
-            splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
-        }
-
+        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
 
         //return the final result
-        SplitInfo splitInfo = new SplitInfo(splitValue, entropy[splitIndex]);
 
-        return splitInfo;
+        return new SplitInfo(splitValue, entropy[splitIndex]);
     }
 
 

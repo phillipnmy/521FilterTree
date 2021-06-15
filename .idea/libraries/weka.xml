@@ -1,12 +1,19 @@
 <component name="libraryTable">
   <library name="weka">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../weka-3-8-5/weka.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../New folder/core.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../New folder/mtj.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../New folder/arpack_combined.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../weka-3-8/stable-3-8.zip!/" />
+      <root url="jar://$PROJECT_DIR$/../weka-lib/mtj.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../weka-lib/core.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../weka-lib/arpack_combined.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../weka-3-8/weka/weka.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../weka-3-8" />
+      <root url="jar://$PROJECT_DIR$/../weka-3-8/weka/weka-src.jar!/src/main/java" />
+      <root url="jar://$PROJECT_DIR$/../weka-3-8/weka/weka-src.jar!/src/test/java" />
+    </SOURCES>
+    <jarDirectory url="jar://$PROJECT_DIR$/../weka-3-8/stable-3-8.zip!/" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../weka-3-8" recursive="false" type="SOURCES" />
   </library>
 </component>
