@@ -427,15 +427,9 @@ public class FilterTree extends RandomizableClassifier {
         currentClassValue = (int)data.get(0).classValue();
         left[currentClassValue] ++;
         right[currentClassValue]--;
-//        if(!Utils.eq(valuePoint , data.get(1).value(attribute))){
-//            entropy[0] = originalEntropy
-//                    - computeEntropy(left)/ insCount
-//                    - computeEntropy(right) * (insCount-1)/ insCount;
-//            valuePoint = data.get(1).value(attribute);
-//        }
 
         //here is the index problem
-        for (int i = 1; i < insCount - 1; i++) {
+        for (int i = 1; i < insCount ; i++) {
             currentClassValue = (int)data.get(i).classValue();
             currentAttributeValue = data.get(i).value(attribute);
             //if the current value is not change, set the infoGain to 0
