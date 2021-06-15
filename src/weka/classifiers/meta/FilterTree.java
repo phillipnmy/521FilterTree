@@ -646,10 +646,10 @@ public class FilterTree extends RandomizableClassifier {
     }
 
 
-        //set it to false when use the allFilter
-//    public boolean implementsMoreEfficientBatchPrediction() {
-//        return true;
-//    }
+        //set it to false when use the allFilter to compare
+    public boolean implementsMoreEfficientBatchPrediction() {
+        return true;
+    }
     /**
      * Method that returns a textual description of the subtree attached to the given node. The description is
      * returned in a string buffer.
