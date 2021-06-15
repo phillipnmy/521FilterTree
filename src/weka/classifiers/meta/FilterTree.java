@@ -545,7 +545,7 @@ public class FilterTree extends RandomizableClassifier {
     protected void distributionForInstance(double[] distribution, Instance instance, Node node) throws Exception {
 
         if (node.NodeInfo instanceof LeafNodeInfo) {
-            //if it is the leaf, jusKt check th prediction
+            //if it is the leaf, just check the prediction
             for (int i = 0; i < distribution.length; i++) {
                 distribution[i] += ((LeafNodeInfo) node.NodeInfo).Prediction[i];
             }
@@ -557,7 +557,7 @@ public class FilterTree extends RandomizableClassifier {
             filter.input(instance);
             Instance filteredInstance = filter.output();
             //check the split value to get the direction to next node
-            if (filteredInstance.value(splitInfo.SplitAttribute.index()) < splitInfo.SplitValue)
+            if (filteredInstance.value(splitInfo.SplitAttribute) < splitInfo.SplitValue)
             {
                 distributionForInstance(distribution, instance, splitInfo.Left);
             }else {
