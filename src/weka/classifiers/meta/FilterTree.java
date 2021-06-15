@@ -427,12 +427,12 @@ public class FilterTree extends RandomizableClassifier {
         currentClassValue = (int)data.get(0).classValue();
         left[currentClassValue] ++;
         right[currentClassValue]--;
-        if(!Utils.eq(valuePoint , data.get(1).value(attribute))){
-            entropy[0] = originalEntropy
-                    - computeEntropy(left)/ insCount
-                    - computeEntropy(right) * (insCount-1)/ insCount;
-            valuePoint = data.get(1).value(attribute);
-        }
+//        if(!Utils.eq(valuePoint , data.get(1).value(attribute))){
+//            entropy[0] = originalEntropy
+//                    - computeEntropy(left)/ insCount
+//                    - computeEntropy(right) * (insCount-1)/ insCount;
+//            valuePoint = data.get(1).value(attribute);
+//        }
 
         //here is the index problem
         for (int i = 1; i < insCount - 1; i++) {
@@ -442,7 +442,7 @@ public class FilterTree extends RandomizableClassifier {
             if (currentAttributeValue == valuePoint){
                 left[currentClassValue] ++;
                 right[currentClassValue]--;
-                entropy[i] = 0.0;
+                entropy[i-1] = 0.0;
             }else {
                 // compute the entropy
                 valuePoint = currentAttributeValue;
@@ -454,19 +454,13 @@ public class FilterTree extends RandomizableClassifier {
                 right[currentClassValue]--;
             }
         }
-        entropy[insCount-2] = originalEntropy
-                - computeEntropy(left) * (insCount-1)/ insCount
-                - computeEntropy(right) / insCount;
 
         splitIndex = Utils.maxIndex(entropy);
         //check the split point
         if (splitIndex == 0){
             splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
         }
-//        else
-//            if(splitIndex ==(insCount -3)) {
-//                splitValue = (data.get(splitIndex+2).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
-//        }
+
         else{
             splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
         }
