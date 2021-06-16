@@ -567,6 +567,7 @@ public class FilterTree extends RandomizableClassifier {
      * @param instance the instance for which a prediction is to be generated.
      * @return the estimates obtained from the tree
      */
+
     public double[] distributionForInstance(Instance instance) throws Exception {
 
         double[] distribution = new double[instance.numClasses()];
@@ -627,10 +628,7 @@ public class FilterTree extends RandomizableClassifier {
     }
 
 
-        //set it to false when use the allFilter to compare
-//    public boolean implementsMoreEfficientBatchPrediction() {
-//        return true;
-//    }
+
     /**
      * Method that returns a textual description of the subtree attached to the given node. The description is
      * returned in a string buffer.
@@ -680,5 +678,10 @@ public class FilterTree extends RandomizableClassifier {
 
         runClassifier(new FilterTree(), args);
     }
+    //set it to false when use the allFilter to compare
 
+    @Override
+    public boolean implementsMoreEfficientBatchPrediction() {
+        return true;
+    }
 }
