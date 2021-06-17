@@ -213,7 +213,7 @@ public class FilterTree extends RandomizableClassifier {
         }
 
         filter.setInputFormat(unfilteredData);
-            //original use type for filter
+        //original use type for filter
 //        for (int i = 0; i < unfilteredData.numInstances(); i++) {
 //            filter.input(unfilteredData.instance(i));
 //        }
@@ -226,7 +226,7 @@ public class FilterTree extends RandomizableClassifier {
 //        }
 
         //Use filter (more efficient)
-        Instances filteredData = Filter.useFilter(unfilteredData,filter);
+        Instances filteredData = Filter.useFilter(unfilteredData, filter);
 
         // Compute attribute with maximum information gain.
         SplitInfo[] infoGainInfo = new SplitInfo[filteredData.numAttributes()];
@@ -262,7 +262,7 @@ public class FilterTree extends RandomizableClassifier {
     protected Node makeLeaf(Node node) {
 
         Instances data = ((UnexpandedNodeInfo) node.NodeInfo).Data;
-        if (data.numInstances() == 0){
+        if (data.numInstances() == 0) {
             return null;
         }
         double[] pred;
@@ -314,6 +314,9 @@ public class FilterTree extends RandomizableClassifier {
         childrenNode[1] = new Node(new UnexpandedNodeInfo(subsets[1]));
 
         node.NodeInfo = new SplitNodeInfo(splitAttribute, splitValue, makeTree(childrenNode[0]), makeTree(childrenNode[1]), filter);
+        //reduce memory cost
+        data = null;
+        filteredData = null;
         return node;
     }
 
@@ -329,13 +332,13 @@ public class FilterTree extends RandomizableClassifier {
     private SplitInfo computeInfoGain(Instances data, Attribute att) throws Exception {
 
         double infoGain = computeEntropy(data);
-        if (Utils.smOrEq(infoGain,0.0)){
-            return new SplitInfo(0,0);
+        if (Utils.smOrEq(infoGain, 0.0)) {
+            return new SplitInfo(0, 0);
         }
 //        SplitInfo splitInfo = computeSplitValue(data, att);
 //        infoGain -= splitInfo.entropy;
 //        splitInfo.entropy = infoGain;
-        return computeSplitValue(data, att,infoGain);
+        return computeSplitValue(data, att, infoGain);
     }
 
 
@@ -351,14 +354,13 @@ public class FilterTree extends RandomizableClassifier {
     }
 
     /**
-     * Computes the entropy of a dataset.
+     *  Computes the best split points of a dataset. (not distinct value)
      *
      * @param unSortData the instance data for which entropy is to be computed
-     * @return the value of Max entropy in the data's class distribution and the entropy
+     * @return the value of Max infoGain in the data's class distribution and the infoGain
      * @throws Exception if computation fails
      */
-//    private SplitInfo computeSplitValue(Instances unSortData, Attribute attribute) throws Exception {
-//
+//    private SplitInfo computeSplitValue(Instances unSortData, Attribute attribute, double originalEntropy) throws Exception {
 //        //make a copy
 //        Instances data = new Instances(unSortData);
 //        //sort it
@@ -367,33 +369,37 @@ public class FilterTree extends RandomizableClassifier {
 //        //storage info
 //        double[] entropy = new double[data.numInstances()-1];
 //        double splitValue;
-//        double valuePoint;
+//        double[] left;
+//        double[] right;
 //        int splitIndex;
 //        int insCount = data.numInstances();
-//        Instances[] subset = new Instances[2];
+//        int currentClassValue;
 //
 //        //initialization
-//        subset[0] = new Instances(data, data.numInstances());
-//        subset[1] = new Instances(data);
-//        valuePoint = data.get(0).value(attribute);
-//        //here is the index problem
-//        for (int i = 0; i < insCount -1; i++) {
-//            subset[0].add(data.get(i));
-//            subset[1].remove(0);
-//            entropy[i] = (computeEntropy(subset[0]) * i/insCount)
-//                    + (computeEntropy(subset[1]) * (insCount - i)/insCount);
-//        }
-//        splitIndex = Utils.minIndex(entropy);
-//        //use this and next data to get the approx data. Not work if many value is the same
-//        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
-////        splitValue = data.get(splitIndex).value(attribute) ;
-//        //return the final result
-//        SplitInfo splitInfo = new SplitInfo(splitValue, entropy[splitIndex]);
+//        right = classList(data);
+//        left = new double[right.length];
 //
-//        return splitInfo;
+//        //here is very risky!
+//        for (int i = 0; i < insCount -1; i++) {
+//            currentClassValue = (int)data.get(i).classValue();
+//            //update class
+//            left[currentClassValue]++;
+//            right[currentClassValue]--;
+//            // compute the entropy
+//            entropy[i] = originalEntropy
+//                        - computeEntropy(left) * (i+1)/ insCount
+//                        - computeEntropy(right) * (insCount-i-1)/ insCount;
+//        }
+//        //get the max value
+//        splitIndex = Utils.maxIndex(entropy);
+//        //check the split point
+//        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
+//        return new SplitInfo(splitValue, entropy[splitIndex]);
+//
 //    }
+
     /**
-     * Computes the entropy of a dataset.
+     * Computes the best split points of a dataset. (distinct value)
      *
      * @param unSortData the instance data for which entropy is to be computed
      * @return the value of Max infoGain in the data's class distribution and the infoGain
@@ -406,7 +412,7 @@ public class FilterTree extends RandomizableClassifier {
         data.sort(attribute);
 
         //storage info
-        double[] entropy = new double[data.numInstances()-1];
+        double[] entropy = new double[data.numInstances() - 1];
         double splitValue;
         double valuePoint;
         double currentAttributeValue;
@@ -416,49 +422,47 @@ public class FilterTree extends RandomizableClassifier {
         int insCount = data.numInstances();
         int currentClassValue;
 
-
         //initialization
         valuePoint = data.get(0).value(attribute);
         right = classList(data);
         left = new double[right.length];
 
         //first time, must run!!!
-      //here is very risky!
-        currentClassValue = (int)data.get(0).classValue();
-        left[currentClassValue] ++;
+        //here is very risky!
+        currentClassValue = (int) data.get(0).classValue();
+        left[currentClassValue]++;
         right[currentClassValue]--;
 
         //here is the index problem
-        for (int i = 1; i < insCount ; i++) {
-            currentClassValue = (int)data.get(i).classValue();
+        for (int i = 1; i < insCount; i++) {
+            currentClassValue = (int) data.get(i).classValue();
             currentAttributeValue = data.get(i).value(attribute);
             //if the current value is not change, set the infoGain to 0
-            if (currentAttributeValue == valuePoint){
-                left[currentClassValue] ++;
+            if (currentAttributeValue == valuePoint) {
+                left[currentClassValue]++;
                 right[currentClassValue]--;
-                entropy[i-1] = 0.0;
-            }else {
+                entropy[i - 1] = 0.0;
+            } else {
                 // compute the entropy
                 valuePoint = currentAttributeValue;
-                entropy[i-1] = originalEntropy
-                        - computeEntropy(left) * (i+1)/ insCount
-                        - computeEntropy(right) * (insCount-i-1)/ insCount;
+                entropy[i - 1] = originalEntropy
+                        - computeEntropy(left) * (i) / insCount
+                        - computeEntropy(right) * (insCount - i) / insCount;
                 //then update the class
-                left[currentClassValue] ++;
+                left[currentClassValue]++;
                 right[currentClassValue]--;
             }
         }
-
+        //get the max value
         splitIndex = Utils.maxIndex(entropy);
         //check the split point
+        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute)) / 2;
 
-        splitValue = (data.get(splitIndex).value(attribute) + data.get(splitIndex + 1).value(attribute))/2;
-
+        //reduce memory cost
+        data = null;
         //return the final result
-
         return new SplitInfo(splitValue, entropy[splitIndex]);
     }
-
 
 
     /**
@@ -503,7 +507,7 @@ public class FilterTree extends RandomizableClassifier {
             }
         }
         double totalNum = 0;
-        for (double num:classCounts) {
+        for (double num : classCounts) {
             totalNum += num;
         }
         entropy /= totalNum;
@@ -550,10 +554,9 @@ public class FilterTree extends RandomizableClassifier {
             filter.input(instance);
             Instance filteredInstance = filter.output();
             //check the split value to get the direction to next node
-            if (filteredInstance.value(splitInfo.SplitAttribute) < splitInfo.SplitValue)
-            {
+            if (filteredInstance.value(splitInfo.SplitAttribute) < splitInfo.SplitValue) {
                 distributionForInstance(distribution, instance, splitInfo.Left);
-            }else {
+            } else {
                 distributionForInstance(distribution, instance, splitInfo.Right);
             }
         }
@@ -586,24 +589,24 @@ public class FilterTree extends RandomizableClassifier {
      * Method that updates the given estimates based on the given instance and the subtree attached to the given node.
      *
      * @param distribution the estimates to be updated
-     * @param instances     the instances for which estimates are to be updated
+     * @param instances    the instances for which estimates are to be updated
      */
     protected void distributionForInstance(double[][] distribution, Instances instances) throws Exception {
 
-            //if it is the split point, use nodeFilter to filter the instance
-            SplitNodeInfo splitInfo = (SplitNodeInfo) RootNode.NodeInfo;
-            Filter filter = ((SplitNodeInfo) RootNode.NodeInfo).SplitFilter;
-            Instances filteredInstances = Filter.useFilter(instances,filter);
+        //if it is the split point, use nodeFilter to filter the instance
+        SplitNodeInfo splitInfo = (SplitNodeInfo) RootNode.NodeInfo;
+        Filter filter = ((SplitNodeInfo) RootNode.NodeInfo).SplitFilter;
+        Instances filteredInstances = Filter.useFilter(instances, filter);
 
-            for (int i = 0; i < filteredInstances.numInstances() ; i++) {
-                if (filteredInstances.instance(i).value(splitInfo.SplitAttribute.index()) < splitInfo.SplitValue)
-                {
-                    distributionForInstance(distribution[i], instances.instance(i), splitInfo.Left);
-                }else {
-                    distributionForInstance(distribution[i], instances.instance(i), splitInfo.Right);
-                }
+        for (int i = 0; i < filteredInstances.numInstances(); i++) {
+            if (filteredInstances.instance(i).value(splitInfo.SplitAttribute.index()) < splitInfo.SplitValue) {
+                distributionForInstance(distribution[i], instances.instance(i), splitInfo.Left);
+            } else {
+                distributionForInstance(distribution[i], instances.instance(i), splitInfo.Right);
             }
+        }
     }
+
     /**
      * Method that returns estimated class probabilities for the given instance if the class is nominal. If the
      * class is numeric, it will return a single-element array with the estimated target value.
@@ -628,14 +631,13 @@ public class FilterTree extends RandomizableClassifier {
     }
 
 
-
     /**
      * Method that returns a textual description of the subtree attached to the given node. The description is
      * returned in a string buffer.
      *
      * @param stringBuffer buffer to hold the description
-     * @param node the node whose subtree is to be described
-     * @param levelString the level of the node in the overall tree structure
+     * @param node         the node whose subtree is to be described
+     * @param levelString  the level of the node in the overall tree structure
      */
     protected void toString(StringBuffer stringBuffer, Node node, String levelString) {
 
